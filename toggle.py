@@ -257,8 +257,38 @@ def toggle():
         GPIO_SET[0] ^= 0x10 # set bit 2    
         GPIO_CLEAR[0] ^= 0x10 # set bit 2
 
+
 @micropython.viper
-def Lcd_Init(l,T: ptr8):
+def SendCMD(c):
+    cmd = int(c)
+    SET = ptr32(0x3FF44008) #Set Register
+    CLR = ptr32(0x3FF4400C) #Clear Register
+    CLR[0] ^= CDRS
+
+    CLR[0] ^= 0xFF << DATA
+    SET[0] ^= cmd << DATA
+    #W Strobe    
+    CLR[0] ^= WR
+    SET[0] ^= WR
+    CLR[0] ^= 0xFF << DATA
+
+@micropython.viper
+def SendD(c):
+    data = int(c)
+    SET = ptr32(0x3FF44008) #Set Register
+    CLR = ptr32(0x3FF4400C) #Clear Register
+
+    SET[0] ^= CDRS
+
+    CLR[0] ^= 0xFF << DATA
+    SET[0] ^= data << DATA
+    CLR[0] ^= WR
+    SET[0] ^= WR
+    CLR[0] ^= 0xFF << DATA
+
+
+@micropython.viper
+def Lcd_Init(len,T: ptr8):
     SET = ptr32(0x3FF44008) #Set Register
     CLR = ptr32(0x3FF4400C) #Clear Register
 
@@ -295,37 +325,141 @@ def Lcd_Init(l,T: ptr8):
     SET[0] ^= WR   
     CLR[0] ^= CS
 
+    SendCMD(0xF9)
+    SendD(0x00)
+    SendD(0x08)
+
+    SendCMD(0xC0)
+    SendD(0x19)
+    SendD(0x1A)
+
+    SendCMD(0xC1)
+    SendD(0x45)
+    SendD(0X00)
+
+    SendCMD(0xC2)
+    SendD(0x33)
+
+    SendCMD(0xC5)
+    SendD(0x00)
+    SendD(0x28)
+
+    SendCMD(0xB1)
+    SendD(0x90)
+    SendD(0x11)
+
+    SendCMD(0xB4)
+    SendD(0x02)
+
+    SendCMD(0xB6)
+    SendD(0x00)
+    SendD(0x42)
+    SendD(0x3B)
+
+    SendCMD(0xB7)
+    SendD(0x07)
+
+    SendCMD(0xE0)
+    SendD(0x1F)
+    SendD(0x25)
+    SendD(0x22)
+    SendD(0x0B)
+    SendD(0x06)
+    SendD(0x0A)
+    SendD(0x4E)
+    SendD(0xC6)
+    SendD(0x39)
+    SendD(0x00)
+    SendD(0x00)
+    SendD(0x00)
+    SendD(0x00)
+    SendD(0x00)
+    SendD(0x00)
+
+    SendCMD(0xE1)
+    SendD(0x1F)
+    SendD(0x3F)
+    SendD(0x3F)
+    SendD(0x0F)
+    SendD(0x1F)
+    SendD(0x0F)
+    SendD(0x46)
+    SendD(0x49)
+    SendD(0x31)
+    SendD(0x05)
+    SendD(0x09)
+    SendD(0x03)
+    SendD(0x1C)
+    SendD(0x1A)
+    SendD(0x00)
+
+    SendCMD(0xF1)
+    SendD(0x36)
+    SendD(0x04)
+    SendD(0x00)
+    SendD(0x3C)
+    SendD(0x0F)
+    SendD(0x0F)
+    SendD(0xA4)
+    SendD(0x02)
+
+    SendCMD(0xF2)
+    SendD(0x18)
+    SendD(0xA3)
+    SendD(0x12)
+    SendD(0x02)
+    SendD(0x32)
+    SendD(0x12)
+    SendD(0xFF)
+    SendD(0x32)
+    SendD(0x00)
+
+    SendCMD(0xF4)
+    SendD(0x40)
+    SendD(0x00)
+    SendD(0x08)
+    SendD(0x91)
+    SendD(0x04)
+
+    SendCMD(0xF8)
+    SendD(0x21)
+    SendD(0x04)
+
+    SendCMD(0x36)
+    SendD(0x48)
+
+    SendCMD(0x3A)
+    SendD(0x55)
+
+    SendCMD(0x11)
+    #ssleep emter
+
+
+
     #init part
-    r = range(l)
-    for e in r: 
-        CLR[0] ^= RST
-        SET[0] ^= RST
-        #l = T[e][1]
-        #x = range(1,l)
-        cmd = int(T[e][0])
-        CLR[0] ^= CDRS
+    # i = 0
+    # l = int(len)
+    # while i<l:
 
 
-        #first command e[0]
-        CLR[0] ^= 0xFF << DATA
-        SET[0] ^= cmd << DATA
-        #W Strobe    
-        CLR[0] ^= WR
-        SET[0] ^= WR
-        CLR[0] ^= 0xFF << DATA
+    #     cmd = T[i]
+    #     sendCMD(cmd)
 
 
-        #sending data now
-        SET[0] ^= CDRS
-        for n in range(3):
-            #data = int(e[n])
-            SET[0] ^= 0xFF << DATA #data << DATA
-            #W Strobe    
-            CLR[0] ^= WR
-            CLR[0] ^= 0xFF << DATA
-            SET[0] ^= WR
-        CLR[0] ^= RD
-        SET[0] ^= RD 
+
+
+    #     i = i+1
+    #     l2 = T[i]
+    #     x = range(0,l2)
+
+    #     #sending data now
+    #     SET[0] ^= CDRS
+    #     for n in x:
+    #         data = int(e[n])
+    #         sendD(data)
+
+    #     i = i+1
+
     SET[0] ^= CS
     
     #TODO delay toggle
@@ -358,7 +492,7 @@ cdrs.on()
 utime.sleep_ms(2000)
 
 
-T = [
+initT = [
     0xF9,2,0x00,0x08,
     0xC0,2,0x19,0x1A,
     0xC1,2,0x45,0x00,
@@ -378,8 +512,8 @@ T = [
     0x3A,1,0x55
 ]
 
-
-Lcd_Init(16,T)
+T = bytearray(initT)
+Lcd_Init(len(T),T)
 
 # reset()
 # utime.sleep_ms(200)
