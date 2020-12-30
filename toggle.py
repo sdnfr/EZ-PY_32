@@ -17,229 +17,35 @@ CDRS = const(0x01<<5)
 DATA = const(12)
 col = const(0xf800)
 
+
+
 @micropython.viper
-def reset():
+def clear(x_1,y_1,x_2,y_2):
     SET = ptr32(0x3FF44008) #Set Register
     CLR = ptr32(0x3FF4400C) #Clear Register
 
-
-
-    SET[0] ^= CS    
-    SET[0] ^= WR   
-    SET[0] ^= CDRS
-
-    CLR[0] ^= RST    
-
-    utime.sleep_ms(3)
-
-
-    SET[0] ^= RST    
     CLR[0] ^= CS
-    CLR[0] ^= CDRS
-    #CLR[0] ^= 0xFF < DATA
-
-
-    #W Strobe 4 low    
-    CLR[0] ^= WR
-    SET[0] ^= WR
-    CLR[0] ^= WR
-    SET[0] ^= WR
-    CLR[0] ^= WR
-    SET[0] ^= WR
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-
-    SET[0] ^= CS    
-    CLR[0] ^= RST
-
-
-@micropython.viper
-def init():
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
-
-
-    initTable = [
-        [0xF1,0x36,0x04,0x00,0x3C,0x0F,0x8F],
-        [0xF2,0x18,0xA3,0x12,0x02,0xB2,0x12,0xFF,0x10,0x00],
-        [0xF8,0x21,0x04],
-        [0xF9,0x00,0x08],
-        [0x36,0x08],
-        [0xB4,0x00],
-        [0xC1,0x41],
-        [0xC5,0x00,0x91,0x80,0x00],
-        [0xE0,0x0F,0x1F,0x1C,0x0C,0x0F,0x08,0x48,0x98,0x37,0x0A,0x13,0x04,0x11,0x0D,0x00],
-        [0xE1,0x0F,0x32,0x2E,0x0B,0x0D,0x05,0x47,0x75,0x37,0x06,0x10,0x03,0x24,0x20,0x00],
-        [0x3A,0x55],
-        [0x11],
-        [0x36,0x28],
-        #delay
-        [0x29]
-    ]
-
-    SET[0] ^= CS
-    SET[0] ^= WR
-    CLR[0] ^= CS
-
-    for e in initTable:        
-        l = len(e)
-        x = range(1,l)
-        cmd = int(e[0])
-        CLR[0] ^= CDRS
-
-
-        #first command 0x00
-        CLR[0] ^= 0xFF << DATA
-        SET[0] ^= 0x00 << DATA
-        #W Strobe    
-        CLR[0] ^= WR
-        SET[0] ^= WR
-
-        #second command e[0]
-        SET[0] ^= cmd << DATA
-        #W Strobe    
-        CLR[0] ^= WR
-        SET[0] ^= WR
-
-        #sending data now
-        CLR[0] ^= 0xFF << DATA
-
-        SET[0] ^= CDRS
-        for n in x:
-            data = int(e[n])
-            SET[0] ^= data << DATA
-            #W Strobe    
-            CLR[0] ^= WR
-            SET[0] ^= WR
-            CLR[0] ^= 0xFF << DATA
-    
-    SET[0] ^= CS
-
-
-
-
-@micropython.viper
-def Address_set(x_1,y_1,x_2,y_2):
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
     x1 = int(x_1)
     y1 = int(y_1)
     x2 = int(x_2)
     y2 = int(y_2)
-
-    CLR[0] ^= CS
-
-    #sending command now
-    CLR[0] ^= CDRS
-
-    #first command 0x00
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= 0x00 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    #second command 0x2a
-    SET[0] ^= 0x2a << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-
-    #sending data now
-    SET[0] ^= CDRS
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= x1>>8 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= x1 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= x2>>8 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= x2 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-
-    #sending command now
-    CLR[0] ^= CDRS
-
-    #first command 0x00
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= 0x00 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    #second command 0x2b
-    SET[0] ^= 0x2b << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-
-    #sending data now
-    SET[0] ^= CDRS
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= y1>>8 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= y1 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= y2>>8 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= y2 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    CLR[0] ^= 0xFF << DATA
-
-    #sending command now
-    CLR[0] ^= CDRS
-
-    #first command 0x00
-    CLR[0] ^= 0xFF << DATA
-    SET[0] ^= 0x00 << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    #second command 0x2b
-    SET[0] ^= 0x2c << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-
-    #sending data now
-    SET[0] ^= CDRS
+    SendCMD(0x2a)
+    SendD(x1>>8)
+    SendD(x1)
+    SendD(x2>>8)
+    SendD(x2)
+    SendCMD(0x2b)
+    SendD(y1>>8)
+    SendD(y1)
+    SendD(y2>>8)
+    SendD(y2)
+    SendCMD(0x2c)						 
 
     for i in range(320):
         for m in range(480):
-            CLR[0] ^= 0xFF << DATA
-            SET[0] ^= col>>8 << DATA
-            CLR[0] ^= WR
-            SET[0] ^= WR
+            SendD(col>>8)
+            SendD(col)
 
-            CLR[0] ^= 0xFF << DATA
-            SET[0] ^= col << DATA
-            CLR[0] ^= WR
-            SET[0] ^= WR
-
-    
     SET[0] ^= CS
 
 
@@ -265,12 +71,19 @@ def SendCMD(c):
     CLR = ptr32(0x3FF4400C) #Clear Register
     CLR[0] ^= CDRS
 
-    CLR[0] ^= 0xFF << DATA
+    # CLR[0] ^= 0xFF << DATA
     SET[0] ^= cmd << DATA
-    #W Strobe    
+    WStrobe() 
+
+    CLR[0] ^= 0xFF << DATA
+
+@micropython.viper
+def WStrobe():
+    SET = ptr32(0x3FF44008) #Set Register
+    CLR = ptr32(0x3FF4400C) #Clear Register
     CLR[0] ^= WR
     SET[0] ^= WR
-    CLR[0] ^= 0xFF << DATA
+
 
 @micropython.viper
 def SendD(c):
@@ -280,38 +93,18 @@ def SendD(c):
 
     SET[0] ^= CDRS
 
-    CLR[0] ^= 0xFF << DATA
+    # CLR[0] ^= 0xFF << DATA
     SET[0] ^= data << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
+    WStrobe() 
     CLR[0] ^= 0xFF << DATA
+
 
 
 @micropython.viper
-def Lcd_Init(len,T: ptr8):
+def Reset():
     SET = ptr32(0x3FF44008) #Set Register
     CLR = ptr32(0x3FF4400C) #Clear Register
 
-    # #from arduino sketch
-    # T = [
-    #     [0xF9,2,0x00,0x08],
-    #     [0xC0,2,0x19,0x1A],
-    #     [0xC1,2,0x45,0x00],
-    #     [0xC2,1,0x33],
-    #     [0xC5,2,0x00,0x28],
-    #     [0xB1,2,0x90,0x11],
-    #     [0xB4,1,0x02],
-    #     [0xB6,3,0x00,0x42,0x3B],
-    #     [0xB7,1,0x07],
-    #     [0xE0,15,0x1F,0x25,0x22,0x0B,0x06,0x0A,0x4E,0xC6,0x39,0x00,0x00,0x00,0x00,0x00,0x00],
-    #     [0xE1,15,0x1F,0x3F,0x3F,0x0F,0x1F,0x0F,0x46,0x49,0x31,0x05,0x09,0x03,0x1C,0x1A,0x00],
-    #     [0xF1,8,0x36,0x04,0x00,0x3C,0x0F,0x0F,0xA4,0x02],
-    #     [0xF2,9,0x18,0xA3,0x12,0x02,0x32,0x12,0xFF,0x32,0x00],
-    #     [0xF4,5,0x40,0x00,0x08,0x91,0x04],
-    #     [0xF8,2,0x21,0x04],
-    #     [0x36,1,0x48],
-    #     [0x3A,1,0x55]
-    # ]
 
     #Reset part
     SET[0] ^= RST    
@@ -321,6 +114,15 @@ def Lcd_Init(len,T: ptr8):
     SET[0] ^= RST    
     utime.sleep_ms(15)
 
+
+
+
+@micropython.viper
+def Lcd_Init():
+    SET = ptr32(0x3FF44008) #Set Register
+    CLR = ptr32(0x3FF4400C) #Clear Register
+
+
     SET[0] ^= CS    
     SET[0] ^= WR   
     CLR[0] ^= CS
@@ -328,37 +130,28 @@ def Lcd_Init(len,T: ptr8):
     SendCMD(0xF9)
     SendD(0x00)
     SendD(0x08)
-
     SendCMD(0xC0)
     SendD(0x19)
     SendD(0x1A)
-
     SendCMD(0xC1)
     SendD(0x45)
     SendD(0X00)
-
     SendCMD(0xC2)
     SendD(0x33)
-
     SendCMD(0xC5)
     SendD(0x00)
     SendD(0x28)
-
     SendCMD(0xB1)
     SendD(0x90)
     SendD(0x11)
-
     SendCMD(0xB4)
     SendD(0x02)
-
     SendCMD(0xB6)
     SendD(0x00)
     SendD(0x42)
     SendD(0x3B)
-
     SendCMD(0xB7)
     SendD(0x07)
-
     SendCMD(0xE0)
     SendD(0x1F)
     SendD(0x25)
@@ -375,7 +168,6 @@ def Lcd_Init(len,T: ptr8):
     SendD(0x00)
     SendD(0x00)
     SendD(0x00)
-
     SendCMD(0xE1)
     SendD(0x1F)
     SendD(0x3F)
@@ -392,7 +184,6 @@ def Lcd_Init(len,T: ptr8):
     SendD(0x1C)
     SendD(0x1A)
     SendD(0x00)
-
     SendCMD(0xF1)
     SendD(0x36)
     SendD(0x04)
@@ -402,7 +193,6 @@ def Lcd_Init(len,T: ptr8):
     SendD(0x0F)
     SendD(0xA4)
     SendD(0x02)
-
     SendCMD(0xF2)
     SendD(0x18)
     SendD(0xA3)
@@ -413,56 +203,24 @@ def Lcd_Init(len,T: ptr8):
     SendD(0xFF)
     SendD(0x32)
     SendD(0x00)
-
     SendCMD(0xF4)
     SendD(0x40)
     SendD(0x00)
     SendD(0x08)
     SendD(0x91)
     SendD(0x04)
-
     SendCMD(0xF8)
     SendD(0x21)
     SendD(0x04)
-
     SendCMD(0x36)
     SendD(0x48)
-
     SendCMD(0x3A)
     SendD(0x55)
-
     SendCMD(0x11)
-    #ssleep emter
 
+    utime.sleep_ms(120)
+    SendCMD(0x29)    
 
-
-    #init part
-    # i = 0
-    # l = int(len)
-    # while i<l:
-
-
-    #     cmd = T[i]
-    #     sendCMD(cmd)
-
-
-
-
-    #     i = i+1
-    #     l2 = T[i]
-    #     x = range(0,l2)
-
-    #     #sending data now
-    #     SET[0] ^= CDRS
-    #     for n in x:
-    #         data = int(e[n])
-    #         sendD(data)
-
-    #     i = i+1
-
-    SET[0] ^= CS
-    
-    #TODO delay toggle
 
 
 print('toggle test')
@@ -491,30 +249,9 @@ cdrs.on()
 
 utime.sleep_ms(2000)
 
-
-initT = [
-    0xF9,2,0x00,0x08,
-    0xC0,2,0x19,0x1A,
-    0xC1,2,0x45,0x00,
-    0xC2,1,0x33,
-    0xC5,2,0x00,0x28,
-    0xB1,2,0x90,0x11,
-    0xB4,1,0x02,
-    0xB6,3,0x00,0x42,0x3B,
-    0xB7,1,0x07,
-    0xE0,15,0x1F,0x25,0x22,0x0B,0x06,0x0A,0x4E,0xC6,0x39,0x00,0x00,0x00,0x00,0x00,0x00,
-    0xE1,15,0x1F,0x3F,0x3F,0x0F,0x1F,0x0F,0x46,0x49,0x31,0x05,0x09,0x03,0x1C,0x1A,0x00,
-    0xF1,8,0x36,0x04,0x00,0x3C,0x0F,0x0F,0xA4,0x02,
-    0xF2,9,0x18,0xA3,0x12,0x02,0x32,0x12,0xFF,0x32,0x00,
-    0xF4,5,0x40,0x00,0x08,0x91,0x04,
-    0xF8,2,0x21,0x04,
-    0x36,1,0x48,
-    0x3A,1,0x55
-]
-
-T = bytearray(initT)
-Lcd_Init(len(T),T)
-
+Reset()
+Lcd_Init()
+clear(0,0,320,480)
 # reset()
 # utime.sleep_ms(200)
 
