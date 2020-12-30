@@ -15,7 +15,7 @@ WR = const(0x01<<0)
 RST = const(0x01<<4)
 CDRS = const(0x01<<5)
 DATA = const(12)
-col = const(0xf800)
+col = const(0x2860)
 
 
 
@@ -51,18 +51,6 @@ def clear(x_1,y_1,x_2,y_2):
 
 
 
-@micropython.viper
-def toggle():
-    GPIO_SET = ptr32(0x3FF44008) # GPIO base register
-    GPIO_CLEAR = ptr32(0x3FF4400C) # GPIO base register
-    GPIO = ptr32(0x3FF44004) # GPIO base register
-
-    for i in range(100):
-        GPIO_SET[0] ^= 0x10 # set bit 2    
-        GPIO_CLEAR[0] ^= 0x10 # set bit 2
-        GPIO_SET[0] ^= 0x10 # set bit 2    
-        GPIO_CLEAR[0] ^= 0x10 # set bit 2
-
 
 @micropython.viper
 def SendCMD(c):
@@ -73,16 +61,10 @@ def SendCMD(c):
 
     # CLR[0] ^= 0xFF << DATA
     SET[0] ^= cmd << DATA
-    WStrobe() 
-
-    CLR[0] ^= 0xFF << DATA
-
-@micropython.viper
-def WStrobe():
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
     CLR[0] ^= WR
     SET[0] ^= WR
+
+    CLR[0] ^= 0xFF << DATA
 
 
 @micropython.viper
@@ -95,7 +77,8 @@ def SendD(c):
 
     # CLR[0] ^= 0xFF << DATA
     SET[0] ^= data << DATA
-    WStrobe() 
+    CLR[0] ^= WR
+    SET[0] ^= WR
     CLR[0] ^= 0xFF << DATA
 
 
