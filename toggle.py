@@ -305,7 +305,7 @@ def Set_Addr_Window(x_1,y_1,x_2,y_2):
 	SendCMD(0x2c)	
 
 @micropython.viper
-fill_Screen(color)
+def fill_Screen(color):
 	col  =int(color)
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
@@ -340,7 +340,7 @@ def Draw_Pixe(x, y, c_):
 
 @micropython.viper
 def Fill_Square(x_, y_, size, c_):
-	#catch error if y and x is taller than max
+	#TODO catch error if y and x is taller than max
 	SET = ptr32(0x3FF44008) #Set Register
 
 	x = int(x_)
@@ -496,12 +496,11 @@ def Draw_Text(x_, y_, st_, co_, si_, x_limit=scr_wdth,y_limit = scr_hght):
 
 @micropython.viper
 def SendCMD(c):
-	cmd = int(c)
+	cmd = int(c) & 0xFF
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
 	CLR[0] ^= CDRS
 
-	# CLR[0] ^= 0xFF << DATA
 	SET[0] ^= cmd << DATA
 	CLR[0] ^= WR
 	SET[0] ^= WR
@@ -511,13 +510,12 @@ def SendCMD(c):
 
 @micropython.viper
 def SendD(c):
-	data = int(c)
+	data = int(c) & 0xFF
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
 
 	SET[0] ^= CDRS
 
-	# CLR[0] ^= 0xFF << DATA
 	SET[0] ^= data << DATA
 	CLR[0] ^= WR
 	SET[0] ^= WR
@@ -529,7 +527,6 @@ def SendD(c):
 def Reset():
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
-
 
 	#Reset part
 	SET[0] ^= RST
@@ -677,24 +674,48 @@ Lcd_Init()
 
 col = 0x001F
 
-fill_Screen(col)
+
+# fill_Screen(0x0001) #schwarz
+# utime.sleep_ms(120)
+
+# fill_Screen(0x000F) #dunkelblau
+# utime.sleep_ms(120)
+
+# fill_Screen(0x003F) #hellblau
+# utime.sleep_ms(120)
+
+# fill_Screen(0xFC00) #orange
+# utime.sleep_ms(120)
+
+# fill_Screen(0x0c00) #dunkelgrün
+# utime.sleep_ms(120)
+
+fill_Screen(0x03c0) 
+utime.sleep_ms(120)
+
+fill_Screen(0xFFFF)
+utime.sleep_ms(120)
+
+fill_Screen(0xAAAA)
+utime.sleep_ms(120)
+
+fill_Screen(0x1111)
+utime.sleep_ms(120)
+
+# wlan = network.WLAN(network.STA_IF) # create station interface
+# wlan.active(True)       # activate the interface
+
+# nets = wlan.scan()
+# wlannetworks = []
+# for net in nets:
+# 	print('network found: ' + net[0].decode("utf-8") )
+# 	wlannetworks.append(net[0].decode("utf-8")) 
 
 
+# size1_longstring = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. But what happens if the displayed text is actually longer than expected? will there be an answer? Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quisque non tellus orci ac auctor. Ut consequat semper viverra nam libero justo. Risus in hendrerit gravida rutrum quisque non tellus orci. Est ultricies integer quis auctor elit sed vulputate mi. Gravida rutrum quisque non tellus orci ac. Habitasse platea dictumst quisque sagittis purus. Dictum varius duis at consectetur lorem donec. Adipiscing at in tellus integer feugiat scelerisque varius. Integer feugiat scelerisque varius morbi enim. Morbi tincidunt augue interdum velit euismod in. Auctor augue mauris augue neque gravida in. Ut lectus arcu bibendum at varius vel pharetra vel. Aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc. Vel orci porta non pulvinar neque laoreet suspendisse interdum. In fermentum et sollicitudin ac orci. Porttitor rhoncus dolor purus non enim praesent elementum facilisis. Commodo ullamcorper a lacus vestibulum. Pulvinar elementum integer enim neque volutpat. Amet risus nullam eget felis eget nunc lobortis. Adipiscing elit pellentesque habitant morbi tristique senectus et. Tristique magna sit amet purus. Malesuada nunc vel risus commodo viverra maecenas accumsan lacus vel. Metus dictum at tempor commodo ullamcorper a lacus vestibulum. Cras fermentum odio eu feugiat pretium nibh ipsum consequat. Velit aliquet sagittis id consectetur purus. Semper feugiat nibh sed pulvinar proin. Tortor consequat id porta nibh venenatis cras. Massa enim nec dui nunc mattis enim ut tellus. Velit ut tortor pretium viverra. Pellentesque elit eget gravida cum sociis natoque penatibus. Nam aliquam sem et tortor consequat id porta. Id diam vel quam elementum pulvinar etiam. Nisl purus in mollis nunc sed id semper risus in. In fermentum et sollicitudin ac orci phasellus. Now this time we are trying it againg: what happens if the displayed Text at size 1 is longer than expected? Will it still print?'
 
-wlan = network.WLAN(network.STA_IF) # create station interface
-wlan.active(True)       # activate the interface
-
-nets = wlan.scan()
-wlannetworks = []
-for net in nets:
-	print('network found: ' + net[0].decode("utf-8") )
-	wlannetworks.append(net[0].decode("utf-8")) 
-
-
-size1_longstring = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. But what happens if the displayed text is actually longer than expected? will there be an answer? Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quisque non tellus orci ac auctor. Ut consequat semper viverra nam libero justo. Risus in hendrerit gravida rutrum quisque non tellus orci. Est ultricies integer quis auctor elit sed vulputate mi. Gravida rutrum quisque non tellus orci ac. Habitasse platea dictumst quisque sagittis purus. Dictum varius duis at consectetur lorem donec. Adipiscing at in tellus integer feugiat scelerisque varius. Integer feugiat scelerisque varius morbi enim. Morbi tincidunt augue interdum velit euismod in. Auctor augue mauris augue neque gravida in. Ut lectus arcu bibendum at varius vel pharetra vel. Aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc. Vel orci porta non pulvinar neque laoreet suspendisse interdum. In fermentum et sollicitudin ac orci. Porttitor rhoncus dolor purus non enim praesent elementum facilisis. Commodo ullamcorper a lacus vestibulum. Pulvinar elementum integer enim neque volutpat. Amet risus nullam eget felis eget nunc lobortis. Adipiscing elit pellentesque habitant morbi tristique senectus et. Tristique magna sit amet purus. Malesuada nunc vel risus commodo viverra maecenas accumsan lacus vel. Metus dictum at tempor commodo ullamcorper a lacus vestibulum. Cras fermentum odio eu feugiat pretium nibh ipsum consequat. Velit aliquet sagittis id consectetur purus. Semper feugiat nibh sed pulvinar proin. Tortor consequat id porta nibh venenatis cras. Massa enim nec dui nunc mattis enim ut tellus. Velit ut tortor pretium viverra. Pellentesque elit eget gravida cum sociis natoque penatibus. Nam aliquam sem et tortor consequat id porta. Id diam vel quam elementum pulvinar etiam. Nisl purus in mollis nunc sed id semper risus in. In fermentum et sollicitudin ac orci phasellus. Now this time we are trying it againg: what happens if the displayed Text at size 1 is longer than expected? Will it still print?'
-
-Draw_Info_Box_Text(x=20,y=20,w=250,h=200,heading="Weather data",body=size1_longstring)
-Draw_Info_Box_List(x=290,y=20,w=170,h=200,heading="Networks",body=wlannetworks)
+# Draw_Info_Box_Text(x=20,y=20,w=250,h=200,heading="Weather data",body=size1_longstring)
+# Draw_Info_Box_List(x=290,y=20,w=170,h=200,heading="Networks",body=wlannetworks)
 
 
 
