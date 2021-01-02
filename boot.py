@@ -3,4 +3,4 @@
 #esp.osdebug(None)
 #import webrepl
 #webrepl.start()
-exec(open("test.py").read())
+exec(open("ezpy32.py").read())
