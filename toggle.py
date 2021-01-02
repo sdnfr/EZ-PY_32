@@ -4,6 +4,8 @@ import time
 import utime
 from machine import Pin
 from micropython import const
+import network
+import ubinascii
 
 #flashing micropython: 
 # esptool.py --chip esp32 --port COM4 write_flash -z 0x1000 esp32-idf3-20200902-v1.13.bin
@@ -20,7 +22,6 @@ ch_hght = const(8)
 scr_wdth = const(480)
 scr_hght = const(320)
 
-col = const(0x001F)
 black = const(0x2860)
 white = const(0x8888)
 lcd_font = [
@@ -304,29 +305,33 @@ def Set_Addr_Window(x_1,y_1,x_2,y_2):
 	SendCMD(0x2c)	
 
 @micropython.viper
+fill_Screen(color)
+	col  =int(color)
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
+
+	Set_Addr_Window(0,0,scr_wdth,scr_hght)
+	for i in range(scr_hght):
+		for m in range(scr_wdth):
+			SendD(col>>8)
+			SendD(col)
+	SET[0] ^= CS
+
+@micropython.viper
 def clear(x_1,y_1,x_2,y_2):
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
 
-	Set_Addr_Window(x_1,y_1,x_2,y_2)
-
-	#TODO not hardcoded range
-	for i in range(320):
-		for m in range(480):
-			SendD(col>>8)
-			SendD(col)
-
+	Set_Addr_Window(0,0,scr_wdth,scr_hght)
+	for i in range(scr_hght):
+		for m in range(scr_wdth):
+			SendD(white>>8)
+			SendD(white)
 	SET[0] ^= CS
 
 @micropython.viper
 def Draw_Pixe(x, y, c_):
 	c = int(c_)
-	#TODO catch these invalid parameters
-	# if((x < 0) || (y < 0) || (x > Get_Width()) || (y > Get_Height()))
-	# {
-	# 	return;
-	# }
-
 	SET = ptr32(0x3FF44008) #Set Register
 	Set_Addr_Window(x, y, x, y)
 	SendD(c>>8)
@@ -406,22 +411,44 @@ def Draw_Dots(x_, y_,co_,si_):
 	x = int(x_)
 	y = int(y_)
 	co = int(co_)
+	h = ch_hght-2
 	if (si == 1):
-		Draw_Pixe(x, y+ch_hght-1,co)
-		Draw_Pixe(x+2*si, y+ch_hght-1,co)
-		Draw_Pixe(x+4*si, y+ch_hght-1,co)
+		Draw_Pixe(x, y+h,co)
+		Draw_Pixe(x+2*si, y+h,co)
+		Draw_Pixe(x+4*si, y+h,co)
 	else:
-		Fill_Square(x, y+(ch_hght*si)-si, si, co)
-		Fill_Square(x+2*si, y+(ch_hght*si)-si, si, co)
-		Fill_Square(x+4*si, y+(ch_hght*si)-si, si, co)
+		Fill_Square(x, y+h*si, si, co)
+		Fill_Square(x+2*si, y+h*si, si, co)
+		Fill_Square(x+4*si, y+h*si, si, co)
 
 
 
-def Draw_Info_Box(x,y,w,h,heading="Heading",body="body",size=1,margin = 0,padding = 10,color = black):
+def Draw_Info_Box_Text(x,y,w,h,heading="Heading",body="body",list = [],size=1,margin = 0,padding = 10,color = black):
 	Draw_Rect(x,y,w,h,white)
-	#Fill_Square(x,y,h,white)
-	Draw_Text(x+padding,y+padding,heading,color,size*2,x_limit=w-2*padding,y_limit=2*size*ch_hght)
+	Draw_Text(x+padding,y+padding,heading,color,size*2,x_limit=x+w-2*padding,y_limit=y+2*size*ch_hght)
 	Draw_Text(x+padding,y+padding+2*size*ch_hght,body,color,size,x_limit=x+ w-padding,y_limit=y+h-padding-2*size*ch_hght)
+
+def Draw_Info_Box_List(x,y,w,h,heading="Heading",body="body",list = [],size=1,margin = 0,padding = 10,color = black):
+	Draw_Rect(x,y,w,h,white)
+	Draw_Text(x+padding,y+padding,heading,color,size*2,x_limit=x+w-2*padding,y_limit=y+2*size*ch_hght)
+	Draw_List(x+padding,y+padding+2*size*ch_hght,body,color,size,x_limit=x+ w-padding,y_limit=y+h-padding-2*size*ch_hght)
+
+
+
+
+def Draw_List(x_, y_, list, co_, si_, x_limit=scr_wdth,y_limit = scr_hght):
+	si = int(si_)
+	x = int(x_)
+	y = int(y_)
+	co = int(co_)
+	ylim = int(y_limit) - si*ch_hght
+	i = 0
+	for item in list:
+		st = str(item)
+		ys = y + i*si*ch_hght
+		if ys < ylim:
+			Draw_Text(x,ys,st,co,si,x_limit,si*ch_hght)
+		i += 1 
 
 
 
@@ -643,44 +670,33 @@ wr.on()
 rst.on()
 cdrs.on()
 
-utime.sleep_ms(2000)
 
 Reset()
 Lcd_Init()
 
 
+col = 0x001F
 
-clear(0,0,480,320)
-
-#utime.sleep_ms(2000)
-
+fill_Screen(col)
 
 
 
+wlan = network.WLAN(network.STA_IF) # create station interface
+wlan.active(True)       # activate the interface
+
+nets = wlan.scan()
+wlannetworks = []
+for net in nets:
+	print('network found: ' + net[0].decode("utf-8") )
+	wlannetworks.append(net[0].decode("utf-8")) 
 
 
-
-
-#Draw_Pixe(20,20,0x2860)
-# Draw_Char(20,20,0x71,0x2860,2)
-# Draw_Char(35,35,0x71,0x2860,3)
-# Draw_Char(55,55,0x71,0x2860,4)
 size1_longstring = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. But what happens if the displayed text is actually longer than expected? will there be an answer? Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quisque non tellus orci ac auctor. Ut consequat semper viverra nam libero justo. Risus in hendrerit gravida rutrum quisque non tellus orci. Est ultricies integer quis auctor elit sed vulputate mi. Gravida rutrum quisque non tellus orci ac. Habitasse platea dictumst quisque sagittis purus. Dictum varius duis at consectetur lorem donec. Adipiscing at in tellus integer feugiat scelerisque varius. Integer feugiat scelerisque varius morbi enim. Morbi tincidunt augue interdum velit euismod in. Auctor augue mauris augue neque gravida in. Ut lectus arcu bibendum at varius vel pharetra vel. Aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc. Vel orci porta non pulvinar neque laoreet suspendisse interdum. In fermentum et sollicitudin ac orci. Porttitor rhoncus dolor purus non enim praesent elementum facilisis. Commodo ullamcorper a lacus vestibulum. Pulvinar elementum integer enim neque volutpat. Amet risus nullam eget felis eget nunc lobortis. Adipiscing elit pellentesque habitant morbi tristique senectus et. Tristique magna sit amet purus. Malesuada nunc vel risus commodo viverra maecenas accumsan lacus vel. Metus dictum at tempor commodo ullamcorper a lacus vestibulum. Cras fermentum odio eu feugiat pretium nibh ipsum consequat. Velit aliquet sagittis id consectetur purus. Semper feugiat nibh sed pulvinar proin. Tortor consequat id porta nibh venenatis cras. Massa enim nec dui nunc mattis enim ut tellus. Velit ut tortor pretium viverra. Pellentesque elit eget gravida cum sociis natoque penatibus. Nam aliquam sem et tortor consequat id porta. Id diam vel quam elementum pulvinar etiam. Nisl purus in mollis nunc sed id semper risus in. In fermentum et sollicitudin ac orci phasellus. Now this time we are trying it againg: what happens if the displayed Text at size 1 is longer than expected? Will it still print?'
-#Draw_Text(20,20,size1_longstring,0x2860,2)
+
+Draw_Info_Box_Text(x=20,y=20,w=250,h=200,heading="Weather data",body=size1_longstring)
+Draw_Info_Box_List(x=290,y=20,w=170,h=200,heading="Networks",body=wlannetworks)
 
 
-
-
-Draw_Info_Box(x=20,y=20,w=250,h=200,heading="Weather data",body=size1_longstring)
-Draw_Info_Box(x=290,y=20,w=120,h=200,heading="networks",body=size1_longstring)
-
-#Draw_Char(85,400,0x71,0x2860,5)
-# reset()
-# utime.sleep_ms(200)
-
-# init()
-# utime.sleep_ms(200)
-# Address_set(0,0,320,480)
 
 
 
