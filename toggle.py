@@ -16,9 +16,13 @@ RST = const(0x01<<4)
 CDRS = const(0x01<<5)
 DATA = const(12)
 col = const(0x001F)
+ch_wdth = const(6)
+ch_hght = const(8)
+scr_wdth = const(480)
+scr_hght = const(320)
 
 lcd_font = [
-    0x00, 0x00, 0x00, 0x00, 0x00,   
+	0x00, 0x00, 0x00, 0x00, 0x00,   
 	0x3E, 0x5B, 0x4F, 0x5B, 0x3E, 	
 	0x3E, 0x6B, 0x4F, 0x6B, 0x3E, 	
 	0x1C, 0x3E, 0x7C, 0x3E, 0x1C, 
@@ -275,267 +279,296 @@ lcd_font = [
 	0x00, 0x00, 0x00, 0x00, 0x00, 
 ]
 
-
-
 @micropython.viper
 def Set_Addr_Window(x_1,y_1,x_2,y_2):
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
 
-    CLR[0] ^= CS
-    x1 = int(x_1)
-    y1 = int(y_1)
-    x2 = int(x_2)
-    y2 = int(y_2)
-    SendCMD(0x2a)
-    SendD(x1>>8)
-    SendD(x1)
-    SendD(x2>>8)
-    SendD(x2)
-    SendCMD(0x2b)
-    SendD(y1>>8)
-    SendD(y1)
-    SendD(y2>>8)
-    SendD(y2)
-    SendCMD(0x2c)	
+	CLR[0] ^= CS
+	x1 = int(x_1)
+	y1 = int(y_1)
+	x2 = int(x_2)
+	y2 = int(y_2)
+	SendCMD(0x2a)
+	SendD(x1>>8)
+	SendD(x1)
+	SendD(x2>>8)
+	SendD(x2)
+	SendCMD(0x2b)
+	SendD(y1>>8)
+	SendD(y1)
+	SendD(y2>>8)
+	SendD(y2)
+	SendCMD(0x2c)	
 
 @micropython.viper
 def clear(x_1,y_1,x_2,y_2):
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
 
-    Set_Addr_Window(x_1,y_1,x_2,y_2)
+	Set_Addr_Window(x_1,y_1,x_2,y_2)
 
-    #TODO not hardcoded range
-    for i in range(320):
-        for m in range(480):
-            SendD(col>>8)
-            SendD(col)
+	#TODO not hardcoded range
+	for i in range(320):
+		for m in range(480):
+			SendD(col>>8)
+			SendD(col)
 
-    SET[0] ^= CS
+	SET[0] ^= CS
 
 @micropython.viper
 def Draw_Pixe(x, y, c_):
-    c = int(c_)
-    #TODO catch these invalid parameters
+	c = int(c_)
+	#TODO catch these invalid parameters
 	# if((x < 0) || (y < 0) || (x > Get_Width()) || (y > Get_Height()))
 	# {
 	# 	return;
 	# }
 
-    SET = ptr32(0x3FF44008) #Set Register
-    Set_Addr_Window(x, y, x, y)
-    SendD(c>>8)
-    SendD(c)
-    SET[0] ^= CS
+	SET = ptr32(0x3FF44008) #Set Register
+	Set_Addr_Window(x, y, x, y)
+	SendD(c>>8)
+	SendD(c)
+	SET[0] ^= CS
 
 @micropython.viper
-def FillSquare(x_, y_, size, c_):
-    #catch error if y and x is taller than max
-    SET = ptr32(0x3FF44008) #Set Register
+def Fill_Square(x_, y_, size, c_):
+	#catch error if y and x is taller than max
+	SET = ptr32(0x3FF44008) #Set Register
 
-    x = int(x_)
-    y = int(y_)
-    c = int(c_)
-    s = int(size)
-    Set_Addr_Window(x, y, x + s - 1, y + s - 1)#set area
-    for i in range(s*s):
-        SendD(c>>8)
-        SendD(c)
-    SET[0] ^= CS
+	x = int(x_)
+	y = int(y_)
+	c = int(c_)
+	s = int(size)
+	Set_Addr_Window(x, y, x + s - 1, y + s - 1)#set area
+	for i in range(s*s):
+		SendD(c>>8)
+		SendD(c)
+	SET[0] ^= CS
 
 
 def Draw_Char(x_, y_, ch_, co_,si_):
-    si = int(si_)
-    ch = int(ch_)
-    x = int(x_)
-    y = int(y_)
-    co = int(co_)
-    for i in range(6):
-        line = 0
-        if (int(i) == 5):
-            line = 0x0
-        else:
-            line = int(lcd_font[(ch*5)+i])
-        for j in range(8):
-            if (int(line) & 0x1):
-                if (si == 1):
-                    Draw_Pixe(x+i, y+j, co)
-                else:
-                    FillSquare(x+(i*si), y+(j*si), si, co)
-            line >>= 1
+	si = int(si_)
+	ch = int(ch_)
+	x = int(x_)
+	y = int(y_)
+	co = int(co_)
+	for i in range(ch_wdth):
+		line = 0
+		if (int(i) == ch_wdth-1):
+			line = 0x0
+		else:
+			line = int(lcd_font[(ch*5)+i])
+		for j in range(ch_hght):
+			if (int(line) & 0x1):
+				if (si == 1):
+					Draw_Pixe(x+i, y+j, co)
+				else:
+					Fill_Square(x+(i*si), y+(j*si), si, co)
+			line >>= 1
 
-def Draw_Text(x_, y_, st_, co_,si_):
-    si = int(si_)
-    st = str(st_)
-    x = int(x_)
-    y = int(y_)
-    co = int(co_)
-    i = 0
-    for ch in st:
-        # print('char: ' + ch)
-        # print('coord' + str(x+i*si*6))
-        Draw_Char(x+i*si*6,y,ord(ch),co,si)
-        i +=1
-
-
-
+def Draw_Dots(x_, y_,co_,si_):
+	si = int(si_)
+	x = int(x_)
+	y = int(y_)
+	co = int(co_)
+	if (si == 1):
+		Draw_Pixe(x, y+ch_hght-1,co)
+		Draw_Pixe(x+2*si, y+ch_hght-1,co)
+		Draw_Pixe(x+4*si, y+ch_hght-1,co)
+	else:
+		Fill_Square(x, y+(ch_hght*si)-si, si, co)
+		Fill_Square(x+2*si, y+(ch_hght*si)-si, si, co)
+		Fill_Square(x+4*si, y+(ch_hght*si)-si, si, co)
 
 
+def Draw_Text(x_, y_, st_, co_, si_, x_limit=scr_wdth,y_limit = scr_hght):
+	si = int(si_)
+	st = str(st_)
+	x = int(x_)
+	y = int(y_)
+	co = int(co_)
+	xi = 0 #x counter
+	yi = 0 #y line counter
+	xlim = int(x_limit) - si * 6 - si*ch_wdth
+	max_digits = 8
+	tablim = xlim - max_digits*si*ch_wdth
+	ylim = int(y_limit)
+	dots = True
+	for ch in st:
+		x_s = x+xi*si*ch_wdth
+		y_s = y+yi*si*ch_hght
+		if x_s < xlim:
+			if x_s < tablim or ord(ch) != 0x20:
+				Draw_Char(x_s, y_s, ord(ch), co, si)
+			else: 			
+				if y_s < ylim:
+					xi = -1
+					yi += 1
+		else:
+			if y_s < ylim:
+				xi = 0
+				yi += 1
+				x_s = x+xi*si*ch_wdth
+				y_s = y+yi*si*ch_hght
+				Draw_Char(x_s, y_s, ord(ch), co, si)
+			else:
+				if dots:
+					Draw_Dots(x_s,y_s,co,si)
+					dots = False
+		xi +=1
 
 
 @micropython.viper
 def SendCMD(c):
-    cmd = int(c)
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
-    CLR[0] ^= CDRS
+	cmd = int(c)
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
+	CLR[0] ^= CDRS
 
-    # CLR[0] ^= 0xFF << DATA
-    SET[0] ^= cmd << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
+	# CLR[0] ^= 0xFF << DATA
+	SET[0] ^= cmd << DATA
+	CLR[0] ^= WR
+	SET[0] ^= WR
 
-    CLR[0] ^= 0xFF << DATA
+	CLR[0] ^= 0xFF << DATA
 
 
 @micropython.viper
 def SendD(c):
-    data = int(c)
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
+	data = int(c)
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
 
-    SET[0] ^= CDRS
+	SET[0] ^= CDRS
 
-    # CLR[0] ^= 0xFF << DATA
-    SET[0] ^= data << DATA
-    CLR[0] ^= WR
-    SET[0] ^= WR
-    CLR[0] ^= 0xFF << DATA
+	# CLR[0] ^= 0xFF << DATA
+	SET[0] ^= data << DATA
+	CLR[0] ^= WR
+	SET[0] ^= WR
+	CLR[0] ^= 0xFF << DATA
 
 
 
 @micropython.viper
 def Reset():
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
 
 
-    #Reset part
-    SET[0] ^= RST    
-    utime.sleep_ms(5)
-    CLR[0] ^= RST
-    utime.sleep_ms(15)
-    SET[0] ^= RST    
-    utime.sleep_ms(15)
-
+	#Reset part
+	SET[0] ^= RST
+	utime.sleep_ms(5)
+	CLR[0] ^= RST
+	utime.sleep_ms(15)
+	SET[0] ^= RST
+	utime.sleep_ms(15)
 
 
 
 @micropython.viper
 def Lcd_Init():
-    SET = ptr32(0x3FF44008) #Set Register
-    CLR = ptr32(0x3FF4400C) #Clear Register
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
 
 
-    SET[0] ^= CS    
-    SET[0] ^= WR   
-    CLR[0] ^= CS
+	SET[0] ^= CS
+	SET[0] ^= WR
+	CLR[0] ^= CS
 
-    SendCMD(0xF9)
-    SendD(0x00)
-    SendD(0x08)
-    SendCMD(0xC0)
-    SendD(0x19)
-    SendD(0x1A)
-    SendCMD(0xC1)
-    SendD(0x45)
-    SendD(0X00)
-    SendCMD(0xC2)
-    SendD(0x33)
-    SendCMD(0xC5)
-    SendD(0x00)
-    SendD(0x28)
-    SendCMD(0xB1)
-    SendD(0x90)
-    SendD(0x11)
-    SendCMD(0xB4)
-    SendD(0x02)
-    SendCMD(0xB6)
-    SendD(0x00)
-    SendD(0x42)
-    SendD(0x3B)
-    SendCMD(0xB7)
-    SendD(0x07)
-    SendCMD(0xE0)
-    SendD(0x1F)
-    SendD(0x25)
-    SendD(0x22)
-    SendD(0x0B)
-    SendD(0x06)
-    SendD(0x0A)
-    SendD(0x4E)
-    SendD(0xC6)
-    SendD(0x39)
-    SendD(0x00)
-    SendD(0x00)
-    SendD(0x00)
-    SendD(0x00)
-    SendD(0x00)
-    SendD(0x00)
-    SendCMD(0xE1)
-    SendD(0x1F)
-    SendD(0x3F)
-    SendD(0x3F)
-    SendD(0x0F)
-    SendD(0x1F)
-    SendD(0x0F)
-    SendD(0x46)
-    SendD(0x49)
-    SendD(0x31)
-    SendD(0x05)
-    SendD(0x09)
-    SendD(0x03)
-    SendD(0x1C)
-    SendD(0x1A)
-    SendD(0x00)
-    SendCMD(0xF1)
-    SendD(0x36)
-    SendD(0x04)
-    SendD(0x00)
-    SendD(0x3C)
-    SendD(0x0F)
-    SendD(0x0F)
-    SendD(0xA4)
-    SendD(0x02)
-    SendCMD(0xF2)
-    SendD(0x18)
-    SendD(0xA3)
-    SendD(0x12)
-    SendD(0x02)
-    SendD(0x32)
-    SendD(0x12)
-    SendD(0xFF)
-    SendD(0x32)
-    SendD(0x00)
-    SendCMD(0xF4)
-    SendD(0x40)
-    SendD(0x00)
-    SendD(0x08)
-    SendD(0x91)
-    SendD(0x04)
-    SendCMD(0xF8)
-    SendD(0x21)
-    SendD(0x04)
-    SendCMD(0x36)
-    SendD(0x78) #rotate 270 degrees horizontal
-    SendCMD(0x3A)
-    SendD(0x55)
-    SendCMD(0x11)
+	SendCMD(0xF9)
+	SendD(0x00)
+	SendD(0x08)
+	SendCMD(0xC0)
+	SendD(0x19)
+	SendD(0x1A)
+	SendCMD(0xC1)
+	SendD(0x45)
+	SendD(0X00)
+	SendCMD(0xC2)
+	SendD(0x33)
+	SendCMD(0xC5)
+	SendD(0x00)
+	SendD(0x28)
+	SendCMD(0xB1)
+	SendD(0x90)
+	SendD(0x11)
+	SendCMD(0xB4)
+	SendD(0x02)
+	SendCMD(0xB6)
+	SendD(0x00)
+	SendD(0x42)
+	SendD(0x3B)
+	SendCMD(0xB7)
+	SendD(0x07)
+	SendCMD(0xE0)
+	SendD(0x1F)
+	SendD(0x25)
+	SendD(0x22)
+	SendD(0x0B)
+	SendD(0x06)
+	SendD(0x0A)
+	SendD(0x4E)
+	SendD(0xC6)
+	SendD(0x39)
+	SendD(0x00)
+	SendD(0x00)
+	SendD(0x00)
+	SendD(0x00)
+	SendD(0x00)
+	SendD(0x00)
+	SendCMD(0xE1)
+	SendD(0x1F)
+	SendD(0x3F)
+	SendD(0x3F)
+	SendD(0x0F)
+	SendD(0x1F)
+	SendD(0x0F)
+	SendD(0x46)
+	SendD(0x49)
+	SendD(0x31)
+	SendD(0x05)
+	SendD(0x09)
+	SendD(0x03)
+	SendD(0x1C)
+	SendD(0x1A)
+	SendD(0x00)
+	SendCMD(0xF1)
+	SendD(0x36)
+	SendD(0x04)
+	SendD(0x00)
+	SendD(0x3C)
+	SendD(0x0F)
+	SendD(0x0F)
+	SendD(0xA4)
+	SendD(0x02)
+	SendCMD(0xF2)
+	SendD(0x18)
+	SendD(0xA3)
+	SendD(0x12)
+	SendD(0x02)
+	SendD(0x32)
+	SendD(0x12)
+	SendD(0xFF)
+	SendD(0x32)
+	SendD(0x00)
+	SendCMD(0xF4)
+	SendD(0x40)
+	SendD(0x00)
+	SendD(0x08)
+	SendD(0x91)
+	SendD(0x04)
+	SendCMD(0xF8)
+	SendD(0x21)
+	SendD(0x04)
+	SendCMD(0x36)
+	SendD(0x78) #rotate 270 degrees horizontal
+	SendCMD(0x3A)
+	SendD(0x55)
+	SendCMD(0x11)
 
-    utime.sleep_ms(120)
-    SendCMD(0x29)    
-
+	utime.sleep_ms(120)
+	SendCMD(0x29)
 
 
 print('toggle test')
@@ -579,7 +612,7 @@ clear(0,0,480,320)
 # Draw_Char(35,35,0x71,0x2860,3)
 # Draw_Char(55,55,0x71,0x2860,4)
 
-Draw_Text(20,20,'Moritz-this is working great',0x2860,2)
+Draw_Text(20,20,'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',0x2860,2)
 
 #Draw_Char(85,400,0x71,0x2860,5)
 # reset()
