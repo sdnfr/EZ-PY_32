@@ -15,12 +15,14 @@ WR = const(0x01<<0)
 RST = const(0x01<<4)
 CDRS = const(0x01<<5)
 DATA = const(12)
-col = const(0x001F)
 ch_wdth = const(6)
 ch_hght = const(8)
 scr_wdth = const(480)
 scr_hght = const(320)
 
+col = const(0x001F)
+black = const(0x2860)
+white = const(0x8888)
 lcd_font = [
 	0x00, 0x00, 0x00, 0x00, 0x00,   
 	0x3E, 0x5B, 0x4F, 0x5B, 0x3E, 	
@@ -346,6 +348,38 @@ def Fill_Square(x_, y_, size, c_):
 		SendD(c)
 	SET[0] ^= CS
 
+@micropython.viper
+def H_line(x_, y_, l_, c_):
+	SET = ptr32(0x3FF44008) #Set Register
+	x = int(x_)
+	y = int(y_)
+	c = int(c_)
+	l = int(l_)
+	Set_Addr_Window(x,y,l+x,y)
+	for i in range(l):
+		SendD(c>>8)
+		SendD(c)
+	SET[0] ^= CS
+
+@micropython.viper
+def V_line(x_, y_, l_, c_):
+	SET = ptr32(0x3FF44008) #Set Register
+	x = int(x_)
+	y = int(y_)
+	c = int(c_)
+	l = int(l_)
+	Set_Addr_Window(x,y,x,y+l)
+	for i in range(l):
+		SendD(c>>8)
+		SendD(c)
+	SET[0] ^= CS
+
+def Draw_Rect(x,y,w,h,c):
+	H_line(x,y,w,c)
+	H_line(x,y+h,w,c)
+	V_line(x,y,h,c)
+	V_line(x+w,y,h,c)
+
 
 def Draw_Char(x_, y_, ch_, co_,si_):
 	si = int(si_)
@@ -382,6 +416,16 @@ def Draw_Dots(x_, y_,co_,si_):
 		Fill_Square(x+4*si, y+(ch_hght*si)-si, si, co)
 
 
+
+def Draw_Info_Box(x,y,w,h,heading="Heading",body="body",size=1,margin = 0,padding = 10,color = black):
+	Draw_Rect(x,y,w,h,white)
+	#Fill_Square(x,y,h,white)
+	Draw_Text(x+padding,y+padding,heading,color,size*2,x_limit=w-2*padding,y_limit=2*size*ch_hght)
+	Draw_Text(x+padding,y+padding+2*size*ch_hght,body,color,size,x_limit=x+ w-padding,y_limit=y+h-padding-2*size*ch_hght)
+
+
+
+
 def Draw_Text(x_, y_, st_, co_, si_, x_limit=scr_wdth,y_limit = scr_hght):
 	si = int(si_)
 	st = str(st_)
@@ -390,21 +434,25 @@ def Draw_Text(x_, y_, st_, co_, si_, x_limit=scr_wdth,y_limit = scr_hght):
 	co = int(co_)
 	xi = 0 #x counter
 	yi = 0 #y line counter
-	xlim = int(x_limit) - si * 6 - si*ch_wdth
+	xlim = int(x_limit) - si * 6 - si*ch_wdth 
 	max_digits = 8
 	tablim = xlim - max_digits*si*ch_wdth
-	ylim = int(y_limit)
+	ylim = int(y_limit)- si*ch_hght
 	dots = True
+	justify = True #this doesnt use linebreaks at end of line
 	for ch in st:
 		x_s = x+xi*si*ch_wdth
 		y_s = y+yi*si*ch_hght
 		if x_s < xlim:
-			if x_s < tablim or ord(ch) != 0x20:
+			if justify: 
 				Draw_Char(x_s, y_s, ord(ch), co, si)
-			else: 			
-				if y_s < ylim:
-					xi = -1
-					yi += 1
+			else: #break line at first space character in the last max_digits digits of a line
+				if x_s < tablim or ord(ch) != 0x20:
+					Draw_Char(x_s, y_s, ord(ch), co, si)
+				else: 			
+					if y_s < ylim:
+						xi = -1
+						yi += 1
 		else:
 			if y_s < ylim:
 				xi = 0
@@ -607,12 +655,24 @@ clear(0,0,480,320)
 #utime.sleep_ms(2000)
 
 
+
+
+
+
+
+
 #Draw_Pixe(20,20,0x2860)
 # Draw_Char(20,20,0x71,0x2860,2)
 # Draw_Char(35,35,0x71,0x2860,3)
 # Draw_Char(55,55,0x71,0x2860,4)
+size1_longstring = 'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum. But what happens if the displayed text is actually longer than expected? will there be an answer? Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Quisque non tellus orci ac auctor. Ut consequat semper viverra nam libero justo. Risus in hendrerit gravida rutrum quisque non tellus orci. Est ultricies integer quis auctor elit sed vulputate mi. Gravida rutrum quisque non tellus orci ac. Habitasse platea dictumst quisque sagittis purus. Dictum varius duis at consectetur lorem donec. Adipiscing at in tellus integer feugiat scelerisque varius. Integer feugiat scelerisque varius morbi enim. Morbi tincidunt augue interdum velit euismod in. Auctor augue mauris augue neque gravida in. Ut lectus arcu bibendum at varius vel pharetra vel. Aliquam malesuada bibendum arcu vitae elementum curabitur vitae nunc. Vel orci porta non pulvinar neque laoreet suspendisse interdum. In fermentum et sollicitudin ac orci. Porttitor rhoncus dolor purus non enim praesent elementum facilisis. Commodo ullamcorper a lacus vestibulum. Pulvinar elementum integer enim neque volutpat. Amet risus nullam eget felis eget nunc lobortis. Adipiscing elit pellentesque habitant morbi tristique senectus et. Tristique magna sit amet purus. Malesuada nunc vel risus commodo viverra maecenas accumsan lacus vel. Metus dictum at tempor commodo ullamcorper a lacus vestibulum. Cras fermentum odio eu feugiat pretium nibh ipsum consequat. Velit aliquet sagittis id consectetur purus. Semper feugiat nibh sed pulvinar proin. Tortor consequat id porta nibh venenatis cras. Massa enim nec dui nunc mattis enim ut tellus. Velit ut tortor pretium viverra. Pellentesque elit eget gravida cum sociis natoque penatibus. Nam aliquam sem et tortor consequat id porta. Id diam vel quam elementum pulvinar etiam. Nisl purus in mollis nunc sed id semper risus in. In fermentum et sollicitudin ac orci phasellus. Now this time we are trying it againg: what happens if the displayed Text at size 1 is longer than expected? Will it still print?'
+#Draw_Text(20,20,size1_longstring,0x2860,2)
 
-Draw_Text(20,20,'Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industrys standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.',0x2860,2)
+
+
+
+Draw_Info_Box(x=20,y=20,w=250,h=200,heading="Weather data",body=size1_longstring)
+Draw_Info_Box(x=290,y=20,w=120,h=200,heading="networks",body=size1_longstring)
 
 #Draw_Char(85,400,0x71,0x2860,5)
 # reset()
