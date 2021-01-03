@@ -4,12 +4,8 @@ import time
 import utime
 from machine import Pin
 from micropython import const
-
-
-#flashing micropython: 
-# esptool.py --chip esp32 --port COM4 write_flash -z 0x1000 esp32-idf3-20200902-v1.13.bin
-#copying files via ampy:
-# ampy --port COM4 put test.py
+import json 
+import math
 
 #Constants
 # CS = None
@@ -320,6 +316,23 @@ def Fill_Square(x_, y_, size, c_):
 	s = int(size)
 	Set_Addr_Window(x, y, x + s - 1, y + s - 1)#set area
 	for i in range(s*s):
+		SendD(c>>8)
+		SendD(c)
+	SET[0] ^= CS
+
+@micropython.viper
+def Fill_Rect(x_, y_, w_, h_, c_):
+	#TODO catch error if y and x is taller than max
+	SET = ptr32(0x3FF44008) #Set Register
+
+	x = int(x_)
+	y = int(y_)
+	c = int(c_)
+	w = int(w_)
+	h = int(h_)
+
+	Set_Addr_Window(x, y, x + w - 1, y + h - 1)#set area
+	for i in range(w*h):
 		SendD(c>>8)
 		SendD(c)
 	SET[0] ^= CS
@@ -658,6 +671,38 @@ def Lcd_Init():
 
 	utime.sleep_ms(120)
 	SendCMD(0x29)
+
+
+
+@micropython.viper
+def printBild():
+	SET = ptr32(0x3FF44008) #Set Register
+	CLR = ptr32(0x3FF4400C) #Clear Register
+
+	# Opening JSON file 
+	f = open('data.json','r')
+	
+	# returns JSON object as  
+	# a dictionary 
+	data = json.load(f) 
+	
+	Set_Addr_Window(0,0,scr_wdth,scr_hght)
+	# Iterating through the json 
+	# list 
+	i_ = 0
+	for r in range(40):
+		for c in range(60):
+			col = int(data[i_])
+			Fill_Square(c*8,r*8,8,col)
+			i_ += 1
+
+	SET[0] ^= CS
+	
+	print(len(data))
+	# Closing file 
+	f.close() 
+
+
 
 def init(rst_,cs_,cdrs_,wr_,rd_):
 	rst =int(rst_)
