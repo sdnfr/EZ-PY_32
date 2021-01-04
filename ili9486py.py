@@ -698,7 +698,6 @@ def printBild():
 
 	SET[0] ^= CS
 	
-	print(len(data))
 	# Closing file 
 	f.close() 
 
@@ -727,7 +726,6 @@ def init(rst_,cs_,cdrs_,wr_,rd_):
 	d6	= machine.Pin(18, machine.Pin.OUT)
 	d7	= machine.Pin(19, machine.Pin.OUT)
 
-	print('cs: ' + str(cs))
 
 	# CS = 0x01<<cs
 	# RD = 0x01<<rd
