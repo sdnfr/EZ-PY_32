@@ -129,11 +129,6 @@ def enableIRQ():
 
 
 #pinout
-CS_pin = 21
-RD_pin = 2
-WR_pin = 0
-RST_pin = 4
-CDRS_pin = 5
 
 
 # def http_get(url):
@@ -160,7 +155,7 @@ CDRS_pin = 5
 # #init display
 
 # #TODO this is still fake init and hardcoded pins
-display.init(RST_pin,CS_pin,CDRS_pin,WR_pin,RD_pin)
+display.init()
 
 
 # #get wlan networks
@@ -198,7 +193,7 @@ drawMain()
 while True:
 	if drawNewDisplay:
 		currentDisplay = currentDisplay["displays"][selector]
-		display.clear_Screen()
+		display.fill_Screen(WHITE)
 		currentDisplay["draw"]()
 		selector = -1
 		drawNewDisplay = False
