@@ -311,3 +311,25 @@ class ST7789(ST77xx):
         self.fill(0)
         self.write(ST77XX_DISPON)
         delay_ms(500)
+
+# spi = machine.SPI(1, baudrate=27000000, polarity=1, sck = sck, mosi = mosi)
+# display = st7789.ST7789(
+#     spi, 135, 240,
+#     reset=machine.Pin(23, machine.Pin.OUT),
+#     dc=machine.Pin(16, machine.Pin.OUT),
+#     cs=machine.Pin(5, machine.Pin.OUT)
+# )
+
+# display.init()
+# print("starting while loop")
+# while True:
+#     display.fill(0xffffff)
+#     display.line(1,1,120,120,0x0)
+#     # display.fill_rect(0, 0, 135, 240,
+#     #     st7789.color565(
+#     #         random.getrandbits(8),
+#     #         random.getrandbits(8),
+#     #         random.getrandbits(8),
+#     #     ),
+#     # )
+#     time.sleep(1)
