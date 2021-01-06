@@ -23,7 +23,6 @@ import controller as con
 # ampy --port COM4 put drivers
 
 
-
 disp.init()
 con.init()
 enc.init(con.onClick,con.onLeft,con.onRight)

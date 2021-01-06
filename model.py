@@ -9,7 +9,8 @@ import ujson
 
 wlan_initalized = False
 wlannetworks =[]
-
+wlan = None
+data = ""
 def http_get(url):
 	import socket
 	_, _, host, path = url.split('/', 3)
@@ -30,6 +31,7 @@ def http_get(url):
 def initWlan():
 	print("init wlan")
 	#get wlan networks
+	global wlan
 	wlan = network.WLAN(network.STA_IF) # create station interface
 	wlan.active(True)	   # activate the interface
 
@@ -41,7 +43,7 @@ def initWlan():
 	networks = wlannetworks
 
 
-def fetchWlan():
+def fetchNetwork():
 	global wlan_initalized
 	if not wlan_initalized:
 		initWlan()
@@ -49,8 +51,21 @@ def fetchWlan():
 	global networks 
 	return networks
 
-def connect():
+def fetchServer():
+	global wlan
+	global data
 	wlan.connect(password.essid, password.pw)
-	print(http_get('http://192.168.2.102/data'))
+	utime.sleep_ms(5000)
+	#print(http_get('http://192.168.2.102/data'))
 	res = requests.get(url='http://192.168.2.102:3000/data')
-	print(res.text)
+	data = res.text
+	return res.text
+	#res = "server was not accessible"
+	#return res
+
+
+def fetchNew():
+	global data
+	res = requests.get(url='http://192.168.2.102:3000/data')
+	data = res.text
+	return res.text

@@ -4,8 +4,6 @@ import machine
 import view as view
 import model as model
 
-wlannetworks = ["a","b"]
-
 
 def select(old,new):
 	WHITE=const(0xFFFF)
@@ -15,12 +13,21 @@ def select(old,new):
 	display.Draw_Rect(new[0]-2,new[1]-2,new[2]+4,new[3]+4,RED)
 
 
-wlan = {"name":"wlan", "displays":[], "selectors":view.getWlanSelectors, "draw":view.drawWlan, "args": [model.fetchWlan()]}
+network = {"name":"network", "displays":[], "selectors":view.getNetworkSelectors, "draw":view.drawNetwork, "args": [model.fetchNetwork()]}
+server = {"name":"server", "displays":[], "selectors":view.getServerSelectors, "draw":view.drawServer, "args": [model.fetchServer()], "refresh":model.fetchNew}
 text = {"name":"text","displays":[], "selectors":view.getTextSelectors,"draw":view.drawText, "args":[]}
 logo = {"name":"logo","displays":[], "selectors":view.getLogoSelectors,"draw":view.drawLogo, "args":[]}
-main = {"name":"main","displays":[text,wlan,logo], "selectors":view.getMainSelectors,"draw":view.drawMain, "args":[]}
-wlan["displays"].append(main)
+main = {"name":"main","displays":[text,network,logo,server], "selectors":view.getMainSelectors,"draw":view.drawMain, "args":[]}
+network["displays"].append(network)
+network["displays"].append(main)
+
+server["displays"].append(server)
+server["displays"].append(main)
+
+text["displays"].append(text)
 text["displays"].append(main)
+
+logo["displays"].append(logo)
 logo["displays"].append(main)
 
 
@@ -48,7 +55,6 @@ def onLeft():
 	else:
 		selector_=max-1
 
-
 	selector = selector_
 	selectNewDisplay = True
 	print('now selected screen' + str(selector_))
@@ -65,7 +71,6 @@ def onRight():
 	else:
 		selector_=0
 
-
 	selector = selector_
 	selectNewDisplay = True
 	print('now selected screen' + str(selector_))
@@ -79,9 +84,10 @@ def update():
 	global currentDisplay
 	if drawNewDisplay:
 		currentDisplay = currentDisplay["displays"][selector]
-		display.fill_Screen(WHITE) #loading
-
-
+		display.fill_Screen(WHITE) #loading screen maybe
+		if 'refresh' in currentDisplay.keys():
+			print("refreshing")
+			currentDisplay["args"][0] = currentDisplay["refresh"]()
 		currentDisplay["draw"](currentDisplay["args"])
 		selector = -1
 		drawNewDisplay = False
