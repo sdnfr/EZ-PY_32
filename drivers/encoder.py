@@ -85,7 +85,6 @@ def right_scrolled(p):
 def clicked(p):
 	print("clicked")
 	reg = 0x3FF44088 + 0x4* int(POTTI_S)
-	print(hex(reg))
 
 	GPIO_PINn_REG = ptr32(reg) #GPIO_PINn_REG Register
 
@@ -163,8 +162,10 @@ def setEncoderMode(mode):
 			setEncoderColorBin(0b101)
 		elif mode == 2:
 			setEncoderColorBin(0b011)
+		elif mode == 3:
+			setEncoderColorBin(0b010)
 		else:
-			setEncoderColorBin(0b000)
+			setEncoderColorBin(0b001)
 
 
 def tick_cb(timer):
