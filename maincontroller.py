@@ -1,6 +1,7 @@
 import drivers.ili9486py as display
+import drivers.encoder as enc
 import machine
-import mainview as mv
+import view as mv
 
 wlannetworks = ["a","b"]
 
@@ -21,10 +22,10 @@ textSelectors = [[450,290,20,20]]
 logoSelectors = [[450,290,20,20]]
 
 
-wlan = {"name":"wlan", "displays":[], "selectors":wlanSelectors, "draw":mv.drawWlan}
-text = {"name":"text","displays":[], "selectors":textSelectors,"draw":mv.drawText}
-logo = {"name":"logo","displays":[], "selectors":logoSelectors,"draw":mv.drawLogo}
-main = {"name":"main","displays":[text,wlan,logo], "selectors":mainSelectors,"draw":mv.drawMain}
+wlan = {"name":"wlan", "displays":[], "selectors":wlanSelectors, "draw":mv.drawWlan, "args": [wlannetworks]}
+text = {"name":"text","displays":[], "selectors":textSelectors,"draw":mv.drawText, "args":[]}
+logo = {"name":"logo","displays":[], "selectors":logoSelectors,"draw":mv.drawLogo, "args":[]}
+main = {"name":"main","displays":[text,wlan,logo], "selectors":mainSelectors,"draw":mv.drawMain, "args":[]}
 wlan["displays"].append(main)
 text["displays"].append(main)
 logo["displays"].append(main)
@@ -77,10 +78,16 @@ def onRight():
 	print('now selected screen' + str(selector_))
 
 def update():
+	global drawNewDisplay
+	global selectedDisplay
+	global selectNewDisplay
+	global oldSelectedDisplay
+	global selector
+	global currentDisplay
 	if drawNewDisplay:
 		currentDisplay = currentDisplay["displays"][selector]
 		display.fill_Screen(WHITE)
-		currentDisplay["draw"]()
+		currentDisplay["draw"](currentDisplay["args"])
 		selector = -1
 		drawNewDisplay = False
 		oldSelectedDisplay = None
@@ -91,7 +98,7 @@ def update():
 		select(oldSelectedDisplay,selectedDisplay)
 		selectNewDisplay = False
 		if currentDisplay == main:
-			encoder.setEncoderMode(selector)
+			enc.setEncoderMode(selector)
 
 def init():
-	drawMain()
+	mv.drawMain([])
