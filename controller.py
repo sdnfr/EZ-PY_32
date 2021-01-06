@@ -1,7 +1,8 @@
 import drivers.ili9486py as display
 import drivers.encoder as enc
 import machine
-import view as mv
+import view as view
+import model as model
 
 wlannetworks = ["a","b"]
 
@@ -14,18 +15,10 @@ def select(old,new):
 	display.Draw_Rect(new[0]-2,new[1]-2,new[2]+4,new[3]+4,RED)
 
 
-
-
-mainSelectors = [[20,20,250,200],[290,20,170,200],[20,240,250,60],[450,290,20,20]]
-wlanSelectors = [[450,290,20,20]]
-textSelectors = [[450,290,20,20]]
-logoSelectors = [[450,290,20,20]]
-
-
-wlan = {"name":"wlan", "displays":[], "selectors":wlanSelectors, "draw":mv.drawWlan, "args": [wlannetworks]}
-text = {"name":"text","displays":[], "selectors":textSelectors,"draw":mv.drawText, "args":[]}
-logo = {"name":"logo","displays":[], "selectors":logoSelectors,"draw":mv.drawLogo, "args":[]}
-main = {"name":"main","displays":[text,wlan,logo], "selectors":mainSelectors,"draw":mv.drawMain, "args":[]}
+wlan = {"name":"wlan", "displays":[], "selectors":view.getWlanSelectors, "draw":view.drawWlan, "args": [model.fetchWlan()]}
+text = {"name":"text","displays":[], "selectors":view.getTextSelectors,"draw":view.drawText, "args":[]}
+logo = {"name":"logo","displays":[], "selectors":view.getLogoSelectors,"draw":view.drawLogo, "args":[]}
+main = {"name":"main","displays":[text,wlan,logo], "selectors":view.getMainSelectors,"draw":view.drawMain, "args":[]}
 wlan["displays"].append(main)
 text["displays"].append(main)
 logo["displays"].append(main)
@@ -86,7 +79,9 @@ def update():
 	global currentDisplay
 	if drawNewDisplay:
 		currentDisplay = currentDisplay["displays"][selector]
-		display.fill_Screen(WHITE)
+		display.fill_Screen(WHITE) #loading
+
+
 		currentDisplay["draw"](currentDisplay["args"])
 		selector = -1
 		drawNewDisplay = False
@@ -94,11 +89,11 @@ def update():
 		selectedDisplay = None
 	if selectNewDisplay:
 		oldSelectedDisplay = selectedDisplay
-		selectedDisplay = currentDisplay["selectors"][selector]
+		selectedDisplay = currentDisplay["selectors"]()[selector]
 		select(oldSelectedDisplay,selectedDisplay)
 		selectNewDisplay = False
 		if currentDisplay == main:
 			enc.setEncoderMode(selector)
 
 def init():
-	mv.drawMain([])
+	view.drawMain([])
