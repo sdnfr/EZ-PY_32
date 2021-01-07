@@ -1,19 +1,21 @@
 # EZ-PY-32
-micropython files for EZ-PY 32 pcb
+Dieses Repository beinhaltet die Micropython-Implentierung der EZ-PY 32 Platine. Diese kann mit einem Uart-Programmiergerät, vorzugsweise CP2102 programmiert werden.
 
 ## Einrichtung
-Benötigt wird die EZ-PY 32 Platine und ein Uart-Programmiergerät, vorzugsweise CP2102. Zusätzlich an Software wird [https://github.com/espressif/esptool esptool.py] und [https://github.com/scientifichackers/ampy ampy] benötigt. Lade nun entweder die binaries für den aktuellsten micropython build für das ESP32 [https://micropython.org/download/esp32/ hier] herunter, oder builde diese selbst nach dieser [https://github.com/micropython/micropython/wiki/Building-Micropython-Binaries Anleitung]. Für ein Beispielprogramm mit den benötigten Drivern muss noch das [https://github.com/stefandnfr/EZ-PY-32 EZ-PY-32 Repo] geklont werden. 
+### Benötigte Software
+* [esptool.py] (https://github.com/espressif/esptool) 
+* [ampy] (https://github.com/scientifichackers/ampy)
+* [micropython binaries] (https://micropython.org/download/esp32/)
 
-Folgende Befehle werden nun benötigt, um den Chip zu flashen
+### Chip flashen
 <br>
 <code> esptool.py --chip esp32 --port PORT erase_flash </code>
 <br>
 <code> esptool.py --chip esp32 --port PORT write_flash -z 0x1000 MICROPYTHON.BIN </code>
 <br>
-Anmerkung: PORT ist der Port auf dem das Gerät erkannt wird, auf Windows z.B. COM3 und Linux z.B. dev/ttyusb0
-MICROPYTHON.BIN ist der Pfad der binary, hierfür muss man mit der command line im selben Ordner sein, dann kann es etwa so aussehen: esp32-idf3-20200902-v1.13.bin 
-<br>
-Das ganze flasht Micropython auf den Chip. Micropython ist ein Interpret/Compiler, der wie ein Betriebssystem läuft und so .py-Dateien zur Laufzeit kompiliert und laufen lässt. Nun müssen noch die Driver für den Display rüberkopiert werden. Dies funktioniert wie folgt:
+
+### .py-Datein auf Chip kopieren
+
 <br>
 <code> ampy --port PORT put boot.py</code>
 <br>
