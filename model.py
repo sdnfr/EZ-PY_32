@@ -1,6 +1,5 @@
 import network
 import ubinascii
-import password
 import utime
 import time
 import urequests as requests
@@ -11,6 +10,7 @@ wlan_initalized = False
 wlannetworks =[]
 wlan = None
 data = ""
+
 def http_get(url):
 	import socket
 	_, _, host, path = url.split('/', 3)
@@ -54,18 +54,34 @@ def fetchNetwork():
 def fetchServer():
 	global wlan
 	global data
-	wlan.connect(password.essid, password.pw)
+	try :
+		import password 
+		wlan.connect(password.essid, password.pw)
+	except:
+		print("could not connect wlan")
+		data = "could not join wlan network"
 	utime.sleep_ms(5000)
-	#print(http_get('http://192.168.2.102/data'))
-	res = requests.get(url='http://192.168.2.102:3000/data')
-	data = res.text
-	return res.text
-	#res = "server was not accessible"
-	#return res
+	if wlan.isconnected():
+		try:
+			res = requests.get(url='http://192.168.2.102:3000/data')
+			data = res.text
+		except:
+			data = "server was not accessible"
+	else:
+		print("could not connect wlan")
+		data = "could not join wlan network"		
+	return data
 
 
 def fetchNew():
 	global data
-	res = requests.get(url='http://192.168.2.102:3000/data')
-	data = res.text
-	return res.text
+	global wlan
+	if wlan.isconnected():
+		try:
+			res = requests.get(url='http://192.168.2.102:3000/data')
+			data = res.text
+		except:
+			data = "server was not accessible"
+	else:
+		data = "could not join wlan network"
+	return data
