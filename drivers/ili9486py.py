@@ -319,7 +319,8 @@ lcd_font = [
 
 
 @micropython.viper
-def Draw_Pixe(x, y, c_):
+def Draw_Pixe(x_, y, c_):
+	x = int(scr_wdth)-int(x_)
 	c = int(c_)
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
@@ -368,11 +369,11 @@ def Fill_Square(x_, y_, size, c_):
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
 
-	x = int(x_)
+	x = int(scr_wdth) - int(x_)
 	y = int(y_)
 	c = int(c_)
 	s = int(size)
-	Set_Addr_Window(x, y, x + s - 1, y + s - 1)#set area
+	Set_Addr_Window(x -s + 1 , y, x, y + s - 1)#set area
 	c1 = int(c>>8) &0xFF
 	c2 = int(c) &0xFF
 
@@ -418,13 +419,13 @@ def Fill_Rect(x_, y_, w_, h_, c_):
 	CLR = ptr32(0x3FF4400C) #Clear Register
 
 
-	x = int(x_)
+	x = int(scr_wdth)-int(x_)
 	y = int(y_)
 	c = int(c_)
 	w = int(w_)
 	h = int(h_)
 
-	Set_Addr_Window(x, y, x + w - 1, y + h - 1)#set area
+	Set_Addr_Window(x -w + 1, y, x, y + h - 1)#set area
 	c1 = int(c>>8) &0xFF
 	c2 = int(c) &0xFF
 
@@ -468,11 +469,11 @@ def H_line(x_, y_, l_, c_):
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
 
-	x = int(x_)
+	x = int(scr_wdth)-int(x_)
 	y = int(y_)
 	c = int(c_)
 	l = int(l_)
-	Set_Addr_Window(x,y,l+x,y)
+	Set_Addr_Window(x-l,y,x,y)
 	c1 = int(c>>8) &0xFF
 	c2 = int(c) &0xFF
 
@@ -516,7 +517,7 @@ def V_line(x_, y_, l_, c_):
 	SET = ptr32(0x3FF44008) #Set Register
 	CLR = ptr32(0x3FF4400C) #Clear Register
 
-	x = int(x_)
+	x = int(scr_wdth)-int(x_)
 	y = int(y_)
 	c = int(c_)
 	l = int(l_)
@@ -903,10 +904,10 @@ def Lcd_Init():
 	SendD(0x91)
 	SendD(0x04)
 	SendCMD(0xF8)
-	SendD(0x21)
+	SendD(0x21)   # 0x20 inverts color
 	SendD(0x04)
 	SendCMD(0x36)
-	SendD(0x78) #rotate 270 degrees horizontal
+	SendD(0x38) #rotate 270 degrees equals 0x78, 90 equals 0x38
 	SendCMD(0x3A)
 	SendD(0x55)
 	SendCMD(0x11)
