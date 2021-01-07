@@ -120,4 +120,4 @@ Ziel des EZ-PY 32 Boards ist es, dieses als Ergänzung zu eigenen Entwicklerboar
 ### Neue Bitmaps hinzufügen
 Die Bitmaps müssen im data.json als eindimensionales Array mit 40x60 Byte insgesamt hinzugefügt werden. Momentan (Stand 06.01.2021) befindet sich die drawBitmap noch in der Display Driver Bibliothek, sollte aber in ein model_bitmap verschoben werden. 
 ## Disclaimer
-Dieses Wiki wurde nach dem Stand des 06.01.2021 verfasst, und wird vorraussichtlich nicht als Dokumentation gepflegt werden. Der Sourcecode ist ''subject to change'' und daher wird die Code-Dokumentation im github repository so weit wie möglich zu pflegen versucht. Dieses Wiki dient nur als Quick Start Guide, und das Endziel ist es, das repository weiter auszubauen und zu verbessern.
+Der Sourcecode ist ''subject to change'' und daher wird die Code-Dokumentation im github repository so weit wie möglich zu pflegen versucht. Dieses Readme dient nur als Quick Start Guide, und die Dokumentation soll im Code gepflegt werden.
