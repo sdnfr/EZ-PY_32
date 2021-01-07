@@ -3,9 +3,9 @@ Dieses Repository beinhaltet die Micropython-Implentierung der EZ-PY 32 Platine.
 
 ## Einrichtung
 ### Benötigte Software
-* [esptool.py] (https://github.com/espressif/esptool) 
-* [ampy] (https://github.com/scientifichackers/ampy)
-* [micropython binaries] (https://micropython.org/download/esp32/)
+* [esptool.py](https://github.com/espressif/esptool) 
+* [ampy](https://github.com/scientifichackers/ampy)
+* [micropython binaries](https://micropython.org/download/esp32/)
 
 ### Chip flashen
 <br>
